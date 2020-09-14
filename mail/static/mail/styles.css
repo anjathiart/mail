@@ -1,3 +1,19 @@
 textarea {
     min-height: 400px;
 }
+
+.emailCard {
+	border: 1px solid black;
+	display: flex;
+	justify-content: stretch;
+	align-items: center;
+}
+
+.emailCard > p:first-child {
+	width: 240px;
+}
+
+.emailCard > p:last-child {
+	margin-left: auto;
+}
+
