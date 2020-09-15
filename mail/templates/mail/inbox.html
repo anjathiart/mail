@@ -30,35 +30,12 @@
             <input type="submit" class="btn btn-primary" id="sendMail" />
         </form>
     </div>
+
+    <div id="readEmail-view">
+    </div>
+
 {% endblock %}
 
 {% block script %}
-    <!-- <script type="text/babel">
-
-    class EmailCard extends React.Component {
-
-        render() {
-          return (
-            "<div><p>{this.props.sender}!</p><p>{this.props.subject}!</p><p>{this.props.timestamp}!</p></div>"
-          );
-        }
-
-      }
-
-    class EmailList extends React.Component {
-
-        render() {
-          return (
-            "<div><EmailCard sender='Sender' subject='Subject' timestamp='Today' /></div>"
-          );
-        }
-      }
-
-    function renderEmailsView() {
-        ReactDOM.render("<EmailList />", document.querySelector("#emails-view"));
-    }
-
-    </script> -->
     <script src="{% static 'mail/inbox.jsx' %}" type="text/jsx"></script>
-    
 {% endblock %}
