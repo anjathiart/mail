@@ -17,3 +17,7 @@ textarea {
 	margin-left: auto;
 }
 
+#compose-body, .readEmail__body {
+    white-space: pre-wrap;
+}
+
