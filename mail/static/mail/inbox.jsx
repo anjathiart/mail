@@ -15,34 +15,45 @@ function myInitCode() {
 	document.querySelector('#archived').addEventListener('click', () => load_mailbox('archive'));
 	document.querySelector('#compose').addEventListener('click', compose_email);
 	document.querySelector('#sendMail').addEventListener('click', send_email);
-	console.log('hi')
+
 	// By default, load the inbox
 	load_mailbox('inbox');
 
 }
 
-function compose_email() {
+function compose_email(sentEmail = null) {
 
-	console.log('b')
-  // Show compose view and hide other views
-  ReactDOM.unmountComponentAtNode(document.getElementById('emails-view'));
-  document.querySelector('#emails-view').style.display = 'none';
-  document.querySelector('#compose-view').style.display = 'block';
+	// Show compose view and hide other views
+	clearReactDom()
+	document.querySelector('#emails-view').style.display = 'none';
+	document.querySelector('#compose-view').style.display = 'block';
 
-  // Clear out composition fields
-  document.querySelector('#compose-recipients').value = '';
-  document.querySelector('#compose-subject').value = '';
-  document.querySelector('#compose-body').value = '';
+	// Clear out composition fields
+	document.querySelector('#compose-recipients').value = '';
+	document.querySelector('#compose-subject').value = '';
+	document.querySelector('#compose-body').value = '';
+
+	// Populate the composition fields if user is replying to the 'sentEmail'
+	if (sentEmail) {
+		document.querySelector('#compose-recipients').value = sentEmail.sender;
+		document.querySelector('#compose-subject').value = (sentEmail.subject.trim().substring(0,3) === 'Re:')
+			? sentEmail.subject
+			: `Re: ${sentEmail.subject}`;
+
+		let body = `\n~On ${sentEmail.timestamp}, ${sentEmail.sender} wrote:\n${sentEmail.body}`
+		document.querySelector('#compose-body').value = body;
+	}
+
 }
 
 function load_mailbox(mailbox) {
 	// Show the mailbox and hide other views
-	ReactDOM.unmountComponentAtNode(document.getElementById('emails-view'));
+	clearReactDom()
 	document.querySelector('#emails-view').style.display = 'block';
 	document.querySelector('#compose-view').style.display = 'none';
 
 	// Show the mailbox name
-	document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
+	document.querySelector('#emails-view__heading').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
 
 	fetch(`/emails/${mailbox}`)
 		.then(response => response.json())
@@ -83,16 +94,19 @@ function send_email() {
 
 function view_email(email) {
 	// Show the mailbox and hide other views
-	ReactDOM.unmountComponentAtNode(document.getElementById('emails-view'));
+	clearReactDom();
 	document.querySelector('#emails-view').style.display = 'none';
 	document.querySelector('#compose-view').style.display = 'none';
 	document.querySelector('#readEmail-view').style.display = 'block';
 
-	console.log(email)
-
-	const archiveButtonText = email.archived ? 'Un-Archive' : 'Archive'
-
 	class ReadEmail extends React.Component {
+		
+		constructor(props) {
+          super(props);
+          this.state = {
+            archived: email.archived
+          };
+        }
 
 		render() {
 			return (
@@ -104,21 +118,18 @@ function view_email(email) {
 						<p><strong>Timestamp: </strong>{ email.timestamp }</p>
 					</div>
 					<div className="readEmail__action">
-						<button className="btn btn-primary" id="replyButton">Reply</button>
-						<button className="btn btn-primary" id="archiveButton">{archiveButtonText}</button>
+						<button className="btn btn-primary" onClick={ this.actionReply }>Reply</button>
+						<button className="btn btn-primary" onClick={ this.actionArchive }>
+							{ this.state.archived ? 'Un-Archive' : 'Archive' }
+						</button>
 					</div>
 					<hr/>
 					<p className="readEmail__body">{ email.body }</p>
         		</div>
 			);
 		}
-	}
 
-	ReactDOM.render(<ReadEmail />, document.querySelector("#readEmail-view"));
-	document.querySelector('.readEmail').addEventListener('click', (event) => {
-		if (event.target.id === "replyButton") {
-			console.log('REPLY TODO');
-		} else if (event.target.id === 'archiveButton') {
+		actionArchive = () => {
 			fetch(`/emails/${email.id}`, {
 				method: 'PUT',
 				body: JSON.stringify({
@@ -126,27 +137,34 @@ function view_email(email) {
 				})
 			})
 			.then(result => {
-			    // Print result
-			    console.log(result);
+				// Print result
+				console.log(result);
+				this.setState(state => ({
+					archived: !state.archived
+				}));
 			})
 			.catch((error) => {
 				console.error('Error', error)
 			});
 		}
-	})
 
+		actionReply = () => {
+			compose_email(email);
+			console.log('REPLY TODO');
+		}
+	}
+
+	ReactDOM.render(<ReadEmail />, document.querySelector("#readEmail-view"));
 
 }
 
 function renderEmailsView(emails) {
-
-	ReactDOM.unmountComponentAtNode(document.getElementById('emails-view'));
 	
 	class EmailCard extends React.Component {
 
 		render() {
 			return (
-				<div className="emailCard" id={"email" + this.props.index} >
+				<div className="emailCard" id={"email" + this.props.index}>
 					<p>{this.props.sender}</p>
 					<p>{this.props.subject}</p>
 					<p>{this.props.timestamp}</p>
@@ -170,15 +188,19 @@ function renderEmailsView(emails) {
 		}
 	}
 
-	ReactDOM.render(<EmailList />, document.querySelector("#emails-view"));
+	ReactDOM.render(<EmailList />, document.querySelector("#emails-view__component"));
 
 	document.querySelectorAll('.emailCard').forEach(el => {
 		el.addEventListener('click', (event) => {
-			console.log(el.id.replace('email', ''))
 			let emailIndex = el.id.replace('email', '')
 			view_email(emails[emailIndex])
 		})
 	})
+}
+
+function clearReactDom() {
+	 ReactDOM.unmountComponentAtNode(document.getElementById('emails-view__component'));
+	 ReactDOM.unmountComponentAtNode(document.getElementById('readEmail-view'));
 }
 
 
