@@ -12,7 +12,7 @@
     <hr>
 
     <div id="emails-view">
-        <div id="emails-view__heading"></div>
+        <h3 id="emails-view__heading"></h3>
         <div id="emails-view__component"></div>
     </div>
 
@@ -23,13 +23,13 @@
                 From: <input disabled class="form-control" value="{{ request.user.email }}">
             </div>
             <div class="form-group">
-                To: <input id="compose-recipients" class="form-control">
+                To: <input id="compose-recipients" class="form-control" placeholder="Recipient email address">
             </div>
             <div class="form-group">
                 <input class="form-control" id="compose-subject" placeholder="Subject">
             </div>
             <textarea class="form-control" id="compose-body" placeholder="Body"></textarea>
-            <input type="submit" class="btn btn-primary" id="sendMail" />
+            <input value="Send" class="btn btn-primary" id="sendMail" />
         </form>
     </div>
 

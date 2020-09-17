@@ -21,3 +21,7 @@ textarea {
     white-space: pre-wrap;
 }
 
+.bgGray {
+	background-color: lightgrey;
+}
+

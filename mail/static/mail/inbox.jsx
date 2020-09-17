@@ -13,16 +13,14 @@ function myInitCode() {
 	document.querySelector('#inbox').addEventListener('click', () => load_mailbox('inbox'));
 	document.querySelector('#sent').addEventListener('click', () => load_mailbox('sent'));
 	document.querySelector('#archived').addEventListener('click', () => load_mailbox('archive'));
-	document.querySelector('#compose').addEventListener('click', compose_email);
+	document.querySelector('#compose').addEventListener('click', () => compose_email());
 	document.querySelector('#sendMail').addEventListener('click', send_email);
 
 	// By default, load the inbox
 	load_mailbox('inbox');
-
 }
 
-function compose_email(sentEmail = null) {
-
+function compose_email(sentEmail) {
 	// Show compose view and hide other views
 	clearReactDom()
 	document.querySelector('#emails-view').style.display = 'none';
@@ -53,7 +51,7 @@ function load_mailbox(mailbox) {
 	document.querySelector('#compose-view').style.display = 'none';
 
 	// Show the mailbox name
-	document.querySelector('#emails-view__heading').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
+	document.querySelector('#emails-view__heading').innerHTML = `${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}`;
 
 	fetch(`/emails/${mailbox}`)
 		.then(response => response.json())
@@ -86,6 +84,8 @@ function send_email() {
 	.then(result => {
 	    // Print result
 	    console.log(result);
+	    // Email is sent succuessfullly so show the 'sent' mailbox
+	    load_mailbox('sent');
 	})
 	.catch((error) => {
 		console.error('Error', error)
@@ -93,18 +93,40 @@ function send_email() {
 }
 
 function view_email(email) {
+
+	// Get the current mailbox that the email was selected from
+	const mailbox = (document.querySelector('#emails-view__heading').innerHTML).toLowerCase();
+
 	// Show the mailbox and hide other views
 	clearReactDom();
 	document.querySelector('#emails-view').style.display = 'none';
 	document.querySelector('#compose-view').style.display = 'none';
 	document.querySelector('#readEmail-view').style.display = 'block';
 
+	// mark the email as being read if not already read
+	if (!email.read) {
+		fetch(`/emails/${email.id}`, {
+			method: 'PUT',
+			body: JSON.stringify({
+				read: true,
+			})
+		})
+		.then(result => {
+			// Print result
+			console.log(result);
+		})
+		.catch((error) => {
+			console.error('Error', error)
+		});
+	}
+
 	class ReadEmail extends React.Component {
 		
 		constructor(props) {
           super(props);
           this.state = {
-            archived: email.archived
+            archived: email.archived,
+            showArchiveButton: mailbox !== 'sent'
           };
         }
 
@@ -119,9 +141,13 @@ function view_email(email) {
 					</div>
 					<div className="readEmail__action">
 						<button className="btn btn-primary" onClick={ this.actionReply }>Reply</button>
-						<button className="btn btn-primary" onClick={ this.actionArchive }>
-							{ this.state.archived ? 'Un-Archive' : 'Archive' }
-						</button>
+						
+						{ this.state.showArchiveButton
+							? <button className="btn btn-primary" onClick={ this.actionArchive }>
+								{ this.state.archived ? 'Un-Archive' : 'Archive' }
+							  </button>
+							: null
+						}
 					</div>
 					<hr/>
 					<p className="readEmail__body">{ email.body }</p>
@@ -150,12 +176,9 @@ function view_email(email) {
 
 		actionReply = () => {
 			compose_email(email);
-			console.log('REPLY TODO');
 		}
 	}
-
 	ReactDOM.render(<ReadEmail />, document.querySelector("#readEmail-view"));
-
 }
 
 function renderEmailsView(emails) {
@@ -164,7 +187,7 @@ function renderEmailsView(emails) {
 
 		render() {
 			return (
-				<div className="emailCard" id={"email" + this.props.index}>
+				<div className={"emailCard " + (this.props.read ? 'bgGray' : '')} id={"email" + this.props.index}>
 					<p>{this.props.sender}</p>
 					<p>{this.props.subject}</p>
 					<p>{this.props.timestamp}</p>
@@ -175,7 +198,7 @@ function renderEmailsView(emails) {
 
 	let list = [];
 	for (let i = 0; i < emails.length; i += 1) {
-		list.push(<EmailCard sender={emails[i].sender} subject={emails[i].subject} timestamp={emails[i].timestamp} index={i} />)
+		list.push(<EmailCard sender={emails[i].sender} subject={emails[i].subject} timestamp={emails[i].timestamp} index={i} read={emails[i].read} />)
 	}
 
 	class EmailList extends React.Component {
