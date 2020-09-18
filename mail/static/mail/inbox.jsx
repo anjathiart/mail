@@ -21,6 +21,13 @@ function myInitCode() {
 }
 
 function compose_email(sentEmail) {
+
+	// Hide compose view message divs
+	document.querySelector('.message--success').style.display = 'none'
+	document.querySelector('.message--success').classList.remove('animateMessage');
+	document.querySelector('.message--error').style.display = 'none';
+	document.querySelector('.message--error').classList.remove('animateMessage');
+
 	// Show compose view and hide other views
 	clearReactDom()
 	document.querySelector('#emails-view').style.display = 'none';
@@ -65,10 +72,17 @@ function load_mailbox(mailbox) {
 }
 
 function send_email() {
-
+	console.log('x')
 	let subject = document.querySelector('#compose-subject').value;
 	let recipients = document.querySelector('#compose-recipients').value;
 	let body = document.querySelector('#compose-body').value;
+
+	let messageSuccess = document.querySelector('.message--success')
+	let messageError = document.querySelector('.message--error')
+	messageSuccess.classList.remove('animateMessage')
+	messageError.classList.remove('animateMessage')
+	messageSuccess.style.display = 'none';
+	messageError.style.display = 'none';
 
 	// TODO: validate input
 
@@ -80,17 +94,38 @@ function send_email() {
 			body,
 		})
 	})
-	.then(response => response.json())
+	.then(response => {
+		// intercept response
+		return response.status;
+	})
 	.then(result => {
-	    // Print result
+
+		// Print result
 	    console.log(result);
-	    // Email is sent succuessfullly so show the 'sent' mailbox
-	    load_mailbox('sent');
+	    // document.querySelector('.message').style.display = 'block';
+		if (result === 200 || result === 201) {
+			document.query
+			messageSuccess.style.display = 'block'
+			messageSuccess.classList.add('animateMessage')
+			setTimeout(function() {
+
+		    	// Email is sent succuessfullly so show the 'sent' mailbox
+		    	load_mailbox('sent');
+	    	}, 2000);
+		} else if (result === 400) {
+			// Error sending email so show 
+			messageError.style.display = 'block'
+			messageError.classList.add('animateMessage')
+			// showMessage('Something went wrong!', 'error');
+		}
+	    
 	})
 	.catch((error) => {
-		console.error('Error', error)
+		console.log('z')
+		console.error('Error', 'error')
 	});
 }
+
 
 function view_email(email) {
 
@@ -220,6 +255,7 @@ function renderEmailsView(emails) {
 		})
 	})
 }
+
 
 function clearReactDom() {
 	 ReactDOM.unmountComponentAtNode(document.getElementById('emails-view__component'));

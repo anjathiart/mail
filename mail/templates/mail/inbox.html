@@ -18,6 +18,9 @@
 
     <div id="compose-view">
         <h3>New Email</h3>
+        <p class="message--success">Message sent!</p>
+        <p class="message--error">Something went wrong! Check fields or try again later.</p>
+
         <form id="compose-form">
             <div class="form-group">
                 From: <input disabled class="form-control" value="{{ request.user.email }}">
@@ -34,6 +37,10 @@
     </div>
 
     <div id="readEmail-view">
+    </div>
+
+    <div id="test">
+
     </div>
 
 {% endblock %}

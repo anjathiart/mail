@@ -25,3 +25,54 @@ textarea {
 	background-color: lightgrey;
 }
 
+
+/*#message {
+	display: block;
+	padding: 2rem;
+	position: fixed !important;
+}*/
+
+
+/* The animation code */
+@keyframes dimInAndOut {
+ 0% {
+ 	opacity: 0;
+ 	line-height: 0;
+ }
+  5%  {
+  	opacity: 0;
+  	line-height: 1;
+  }
+
+  100% {
+	opacity: 1;
+	line-height: 1;
+}
+}
+
+
+.animateMessage {
+	opacity: 1;
+	line-height: 1;
+	animation-name: dimInAndOut;
+	animation-duration: 1.5s;
+	animation-timing-function: ease-in;
+}
+
+.message--neutral {
+	background-color: lightgrey;
+}
+
+.message--success {
+	line-height: 1;
+	display: none;
+	color: green;
+}
+.message--warning {
+	/*background-color: orange;*/
+}
+.message--error {
+	line-height: 1;
+	display: none;
+	color: red;
+}
