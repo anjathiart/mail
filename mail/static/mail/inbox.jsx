@@ -9,6 +9,7 @@ if( document.readyState !== 'loading' ) {
 }
 
 function myInitCode() {
+	
 	// Use buttons to toggle between views
 	document.querySelector('#inbox').addEventListener('click', () => load_mailbox('inbox'));
 	document.querySelector('#sent').addEventListener('click', () => load_mailbox('sent'));
@@ -52,6 +53,7 @@ function compose_email(sentEmail) {
 }
 
 function load_mailbox(mailbox) {
+
 	// Show the mailbox and hide other views
 	clearReactDom()
 	document.querySelector('#emails-view').style.display = 'block';
@@ -63,6 +65,7 @@ function load_mailbox(mailbox) {
 	fetch(`/emails/${mailbox}`)
 		.then(response => response.json())
 		.then(emails => {
+
 		// Print emails
 		console.log(emails);
 
@@ -72,15 +75,15 @@ function load_mailbox(mailbox) {
 }
 
 function send_email() {
-	console.log('x')
-	let subject = document.querySelector('#compose-subject').value;
-	let recipients = document.querySelector('#compose-recipients').value;
-	let body = document.querySelector('#compose-body').value;
 
-	let messageSuccess = document.querySelector('.message--success')
-	let messageError = document.querySelector('.message--error')
-	messageSuccess.classList.remove('animateMessage')
-	messageError.classList.remove('animateMessage')
+	const subject = document.querySelector('#compose-subject').value;
+	const recipients = document.querySelector('#compose-recipients').value;
+	const body = document.querySelector('#compose-body').value;
+
+	const messageSuccess = document.querySelector('.message--success');
+	const messageError = document.querySelector('.message--error');
+	messageSuccess.classList.remove('animateMessage');
+	messageError.classList.remove('animateMessage');
 	messageSuccess.style.display = 'none';
 	messageError.style.display = 'none';
 
@@ -102,27 +105,23 @@ function send_email() {
 
 		// Print result
 	    console.log(result);
-	    // document.querySelector('.message').style.display = 'block';
-		if (result === 200 || result === 201) {
-			document.query
-			messageSuccess.style.display = 'block'
-			messageSuccess.classList.add('animateMessage')
-			setTimeout(function() {
 
+	    // Show and animate email sent status message
+		if (result === 200 || result === 201) {
+			messageSuccess.style.display = 'block';
+			messageSuccess.classList.add('animateMessage');
+			setTimeout(function() {
 		    	// Email is sent succuessfullly so show the 'sent' mailbox
 		    	load_mailbox('sent');
 	    	}, 2000);
 		} else if (result === 400) {
 			// Error sending email so show 
-			messageError.style.display = 'block'
-			messageError.classList.add('animateMessage')
-			// showMessage('Something went wrong!', 'error');
+			messageError.style.display = 'block';
+			messageError.classList.add('animateMessage');
 		}
-	    
 	})
 	.catch((error) => {
-		console.log('z')
-		console.error('Error', 'error')
+		console.error('Error', error);
 	});
 }
 
@@ -161,7 +160,7 @@ function view_email(email) {
           super(props);
           this.state = {
             archived: email.archived,
-            showArchiveButton: mailbox !== 'sent'
+            showButtons: mailbox !== 'sent',
           };
         }
 
@@ -174,22 +173,21 @@ function view_email(email) {
 						<p><strong>Subject: </strong>{ email.subject }</p>
 						<p><strong>Timestamp: </strong>{ email.timestamp }</p>
 					</div>
+					{ this.state.showButtons ?
 					<div className="readEmail__action">
-						<button className="btn btn-primary" onClick={ this.actionReply }>Reply</button>
-						
-						{ this.state.showArchiveButton
-							? <button className="btn btn-primary" onClick={ this.actionArchive }>
-								{ this.state.archived ? 'Un-Archive' : 'Archive' }
-							  </button>
-							: null
-						}
+						<button className="btn btn-sm btn-outline-primary" onClick={ this.actionReply }>Reply</button>
+						<button className="btn btn-sm btn-outline-secondary" onClick={ this.actionArchive }>
+							{ this.state.archived ? 'Un-Archive' : 'Archive' }
+						 </button>
 					</div>
+					: null }
 					<hr/>
 					<p className="readEmail__body">{ email.body }</p>
         		</div>
 			);
 		}
 
+		// Archive / Un-archive email method
 		actionArchive = () => {
 			fetch(`/emails/${email.id}`, {
 				method: 'PUT',
@@ -198,8 +196,7 @@ function view_email(email) {
 				})
 			})
 			.then(result => {
-				// Print result
-				console.log(result);
+				// update state
 				this.setState(state => ({
 					archived: !state.archived
 				}));
@@ -209,10 +206,12 @@ function view_email(email) {
 			});
 		}
 
+		// Reply method
 		actionReply = () => {
 			compose_email(email);
 		}
 	}
+
 	ReactDOM.render(<ReadEmail />, document.querySelector("#readEmail-view"));
 }
 
@@ -222,15 +221,16 @@ function renderEmailsView(emails) {
 
 		render() {
 			return (
-				<div className={"emailCard " + (this.props.read ? 'bgGray' : '')} id={"email" + this.props.index}>
-					<p>{this.props.sender}</p>
-					<p>{this.props.subject}</p>
-					<p>{this.props.timestamp}</p>
+				<div className={"emailCard " + (this.props.read === true ? 'bgGray' : 'bgWhite')} id={"email" + this.props.index}>
+					<p className="emailCard--sender">{this.props.sender}</p>
+					<p className="emailCard--subject">{this.props.subject}</p>
+					<p className="emailCard--date">{this.props.timestamp}</p>
         		</div>
 			);
 		}
 	}
 
+	// Build the list of email card components for the mailbox content
 	let list = [];
 	for (let i = 0; i < emails.length; i += 1) {
 		list.push(<EmailCard sender={emails[i].sender} subject={emails[i].subject} timestamp={emails[i].timestamp} index={i} read={emails[i].read} />)
@@ -239,15 +239,15 @@ function renderEmailsView(emails) {
 	class EmailList extends React.Component {
 		render() {
 			return (
-				<div>
-					{ list }
-				</div>
+				<div>{ list }</div>
 			);
 		}
 	}
 
 	ReactDOM.render(<EmailList />, document.querySelector("#emails-view__component"));
 
+	// Open an email when the email card object is clicked on
+	// TODO: this should be a method of the EmailCard class
 	document.querySelectorAll('.emailCard').forEach(el => {
 		el.addEventListener('click', (event) => {
 			let emailIndex = el.id.replace('email', '')
@@ -256,7 +256,7 @@ function renderEmailsView(emails) {
 	})
 }
 
-
+// Unmount the react components
 function clearReactDom() {
 	 ReactDOM.unmountComponentAtNode(document.getElementById('emails-view__component'));
 	 ReactDOM.unmountComponentAtNode(document.getElementById('readEmail-view'));
