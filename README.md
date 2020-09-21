@@ -2,6 +2,8 @@
 
 A simple front-end for an email client that makes API calls to send and receive emails.
 
+Demo video: https://youtu.be/B9a-E1Lf67s
+
 ## Front End
 - Django
 - HTML
